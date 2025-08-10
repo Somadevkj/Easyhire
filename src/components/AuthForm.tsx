@@ -32,7 +32,7 @@ export const AuthForm: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const success = await login(formData.email, formData.password, selectedLoginType!);
       if (success) {
@@ -41,10 +41,17 @@ export const AuthForm: React.FC = () => {
           description: "You have successfully logged in.",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      let description = "Please check your credentials and try again.";
+      if (error.message === "No user found. Please register first.") {
+        description = "No account found. Please sign up first.";
+      } else if (error.message === "Invalid credentials") {
+        description = "Email, password, or user type is incorrect.";
+      }
+
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description,
         variant: "destructive",
       });
     } finally {
@@ -55,7 +62,7 @@ export const AuthForm: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const success = await register(
         formData.email, 
@@ -89,14 +96,24 @@ export const AuthForm: React.FC = () => {
           Connect with opportunities or find the perfect candidate
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 gap-0">
+            <TabsTrigger
+              value="login"
+              className="w-full justify-center text-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Login
+            </TabsTrigger>
+            <TabsTrigger
+              value="register"
+              className="w-full justify-center text-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Sign Up
+            </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="login">
             {!selectedLoginType ? (
               <div className="space-y-4">
@@ -108,7 +125,7 @@ export const AuthForm: React.FC = () => {
                     Please select your role to continue
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-3">
                   <Button 
                     variant="outline" 
@@ -118,7 +135,7 @@ export const AuthForm: React.FC = () => {
                     <span className="font-semibold">Job Seeker</span>
                     <span className="text-xs text-muted-foreground">Looking for opportunities</span>
                   </Button>
-                  
+
                   <Button 
                     variant="outline" 
                     className="h-16 flex-col gap-2 hover:bg-primary/5"
@@ -144,7 +161,7 @@ export const AuthForm: React.FC = () => {
                     Change
                   </Button>
                 </div>
-                
+
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -156,7 +173,7 @@ export const AuthForm: React.FC = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Password</Label>
                     <Input
@@ -167,7 +184,7 @@ export const AuthForm: React.FC = () => {
                       required
                     />
                   </div>
-                  
+
                   <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Login as {selectedLoginType === 'candidate' ? 'Job Seeker' : 'Recruiter'}
@@ -176,7 +193,7 @@ export const AuthForm: React.FC = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
@@ -189,7 +206,7 @@ export const AuthForm: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="register-email">Email</Label>
                 <Input
@@ -200,7 +217,7 @@ export const AuthForm: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
                 <Input
@@ -211,7 +228,7 @@ export const AuthForm: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-3">
                 <Label>I am a...</Label>
                 <RadioGroup 
@@ -229,7 +246,7 @@ export const AuthForm: React.FC = () => {
                   </div>
                 </RadioGroup>
               </div>
-              
+
               {formData.userType === 'recruiter' && (
                 <div className="space-y-2">
                   <Label htmlFor="company">Company Name</Label>
@@ -242,7 +259,7 @@ export const AuthForm: React.FC = () => {
                   />
                 </div>
               )}
-              
+
               <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
