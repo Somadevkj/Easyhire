@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 export const AuthForm: React.FC = () => {
   const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedLoginType, setSelectedLoginType] = useState<UserType | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -33,7 +34,7 @@ export const AuthForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(formData.email, formData.password, 'candidate');
+      const success = await login(formData.email, formData.password, selectedLoginType!);
       if (success) {
         toast({
           title: "Welcome back!",
@@ -97,34 +98,83 @@ export const AuthForm: React.FC = () => {
           </TabsList>
           
           <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
-                <Input
-                  id="login-email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange('email')}
-                  required
-                />
+            {!selectedLoginType ? (
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Are you a Candidate or Recruiter?
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Please select your role to continue
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex-col gap-2 hover:bg-primary/5"
+                    onClick={() => setSelectedLoginType('candidate')}
+                  >
+                    <span className="font-semibold">Job Seeker</span>
+                    <span className="text-xs text-muted-foreground">Looking for opportunities</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex-col gap-2 hover:bg-primary/5"
+                    onClick={() => setSelectedLoginType('recruiter')}
+                  >
+                    <span className="font-semibold">Recruiter</span>
+                    <span className="text-xs text-muted-foreground">Hiring talent</span>
+                  </Button>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
-                <Input
-                  id="login-password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange('password')}
-                  required
-                />
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">
+                    {selectedLoginType === 'candidate' ? 'Job Seeker Login' : 'Recruiter Login'}
+                  </h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setSelectedLoginType(null)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Change
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange('email')}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Login as {selectedLoginType === 'candidate' ? 'Job Seeker' : 'Recruiter'}
+                  </Button>
+                </form>
               </div>
-              
-              <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login
-              </Button>
-            </form>
+            )}
           </TabsContent>
           
           <TabsContent value="register">
