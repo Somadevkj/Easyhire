@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Job } from '@/types/job';
 import { JobCard } from '@/components/JobCard';
+import { ApplicationInbox } from '@/components/ApplicationInbox';
+import { ProfileSetup } from '@/components/ProfileSetup';
+import { NotificationSystem } from '@/components/NotificationSystem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Briefcase, Users, Eye } from 'lucide-react';
+import { Plus, Briefcase, Users, Eye, Inbox, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -154,17 +158,51 @@ export const RecruiterDashboard: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Job Management</h1>
-            <p className="text-muted-foreground">Manage your job listings and track applications</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Recruiter Dashboard</h1>
+            <p className="text-muted-foreground">Manage your recruitment process</p>
           </div>
-          
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="hero" onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Job
-              </Button>
-            </DialogTrigger>
+          <NotificationSystem />
+        </div>
+
+        <Tabs defaultValue="applications" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="applications" className="flex items-center gap-2">
+              <Inbox className="w-4 h-4" />
+              Applications
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Job Management
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="company" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Company
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="applications" className="mt-6">
+            <ApplicationInbox />
+          </TabsContent>
+
+          <TabsContent value="jobs" className="mt-6">
+            <div className="mb-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">Job Management</h2>
+                  <p className="text-muted-foreground">Manage your job listings and track applications</p>
+                </div>
+                
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Job
+                    </Button>
+                  </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingJob ? 'Edit Job Listing' : 'Create New Job Listing'}</DialogTitle>
@@ -276,70 +314,81 @@ export const RecruiterDashboard: React.FC = () => {
                 }}>
                   Cancel
                 </Button>
-                <Button variant="hero" onClick={editingJob ? handleUpdateJob : handleCreateJob}>
+                <Button onClick={editingJob ? handleUpdateJob : handleCreateJob}>
                   {editingJob ? 'Update Job' : 'Create Job'}
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                </DialogContent>
+                </Dialog>
+              </div>
+            </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
-            <div className="flex items-center gap-3">
-              <Briefcase className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">{jobs.length}</p>
-                <p className="text-sm text-muted-foreground">Active Jobs</p>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{jobs.length}</p>
+                    <p className="text-sm text-muted-foreground">Active Jobs</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
+                <div className="flex items-center gap-3">
+                  <Users className="h-8 w-8 text-accent" />
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{totalApplications}</p>
+                    <p className="text-sm text-muted-foreground">Total Applications</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
+                <div className="flex items-center gap-3">
+                  <Eye className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{jobs.length * 150}</p>
+                    <p className="text-sm text-muted-foreground">Profile Views</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-accent" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">{totalApplications}</p>
-                <p className="text-sm text-muted-foreground">Total Applications</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-card p-6 rounded-lg border shadow-card">
-            <div className="flex items-center gap-3">
-              <Eye className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">{jobs.length * 150}</p>
-                <p className="text-sm text-muted-foreground">Profile Views</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Job Listings */}
-        {jobs.length === 0 ? (
-          <div className="text-center py-12">
-            <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No job listings yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first job listing to start attracting candidates</p>
-            <Button variant="hero" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Job
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onEdit={handleEditJob}
-                onDelete={handleDeleteJob}
-              />
-            ))}
-          </div>
-        )}
+            {/* Job Listings */}
+            {jobs.length === 0 ? (
+              <div className="text-center py-12">
+                <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No job listings yet</h3>
+                <p className="text-muted-foreground mb-4">Create your first job listing to start attracting candidates</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 h-4 mr-2" />
+                  Create Your First Job
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {jobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onEdit={handleEditJob}
+                    onDelete={handleDeleteJob}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-6">
+            <ProfileSetup />
+          </TabsContent>
+
+          <TabsContent value="company" className="mt-6">
+            <ProfileSetup />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
