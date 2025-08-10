@@ -11,18 +11,35 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Briefcase, Users, Eye, Inbox, User } from 'lucide-react';
+import { Plus, Briefcase, Users, Eye, Inbox, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { useJobs } from './JobContext';
+
+// Mock data for recruiter's jobs
+const mockRecruiterJobs: Job[] = [{
+  id: '1',
+  title: 'Senior Frontend Developer',
+  company: 'TechCorp Inc.',
+  location: 'San Francisco, CA',
+  type: 'full-time',
+  salary: {
+    min: 120000,
+    max: 180000,
+    currency: '$'
+  },
+  description: 'We are looking for a skilled Frontend Developer to join our team.',
+  requirements: ['React', 'TypeScript', 'Node.js', '5+ years experience'],
+  benefits: ['Health Insurance', 'Remote Work', '401k', 'Stock Options'],
+  postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  recruiterId: 'current-user',
+  isActive: true
+}];
 
 export const RecruiterDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { jobs, setJobs } = useJobs();
-
+  const [jobs, setJobs] = useState<Job[]>(mockRecruiterJobs);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
-
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -75,13 +92,12 @@ export const RecruiterDashboard: React.FC = () => {
         currency: '$'
       },
       description: formData.description,
-      requirements: formData.requirements.split(',').map(r => r.trim()).filter(Boolean),
-      benefits: formData.benefits.split(',').map(b => b.trim()).filter(Boolean),
+      requirements: formData.requirements.split(',').map(r => r.trim()),
+      benefits: formData.benefits.split(',').map(b => b.trim()),
       postedAt: new Date(),
       recruiterId: user?.id || '',
       isActive: true
     };
-
     setJobs(prev => [newJob, ...prev]);
     setIsCreateDialogOpen(false);
     resetForm();
@@ -119,10 +135,9 @@ export const RecruiterDashboard: React.FC = () => {
         currency: '$'
       },
       description: formData.description,
-      requirements: formData.requirements.split(',').map(r => r.trim()).filter(Boolean),
-      benefits: formData.benefits.split(',').map(b => b.trim()).filter(Boolean)
+      requirements: formData.requirements.split(',').map(r => r.trim()),
+      benefits: formData.benefits.split(',').map(b => b.trim())
     };
-
     setJobs(prev => prev.map(job => job.id === editingJob.id ? updatedJob : job));
     setIsCreateDialogOpen(false);
     resetForm();
@@ -155,6 +170,7 @@ export const RecruiterDashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="applications" className="w-full">
+          {/* FIX: use flex so tabs line up evenly for any number of tabs */}
           <TabsList className="flex w-full justify-around">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <Inbox className="w-4 h-4" />
@@ -175,97 +191,98 @@ export const RecruiterDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="jobs" className="mt-6">
-            <div className="mb-8 flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Job Management</h2>
-                <p className="text-muted-foreground">Manage your job listings and track applications</p>
+            <div className="mb-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">Job Management</h2>
+                  <p className="text-muted-foreground">Manage your job listings and track applications</p>
+                </div>
+
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Job
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingJob ? 'Edit Job Listing' : 'Create New Job Listing'}</DialogTitle>
+                      <DialogDescription>
+                        {editingJob ? 'Update your job listing details' : 'Fill in the details to create a new job listing'}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Job Title</Label>
+                        <Input id="title" value={formData.title} onChange={handleInputChange('title')} placeholder="e.g. Senior Frontend Developer" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="location">Location</Label>
+                          <Input id="location" value={formData.location} onChange={handleInputChange('location')} placeholder="e.g. San Francisco, CA" />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="type">Job Type</Label>
+                          <Select value={formData.type} onValueChange={handleSelectChange}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full-time">Full Time</SelectItem>
+                              <SelectItem value="part-time">Part Time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="freelance">Freelance</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="salaryMin">Min Salary ($)</Label>
+                          <Input id="salaryMin" type="number" value={formData.salaryMin} onChange={handleInputChange('salaryMin')} placeholder="80000" />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="salaryMax">Max Salary ($)</Label>
+                          <Input id="salaryMax" type="number" value={formData.salaryMax} onChange={handleInputChange('salaryMax')} placeholder="120000" />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Job Description</Label>
+                        <Textarea id="description" value={formData.description} onChange={handleInputChange('description')} placeholder="Describe the role, responsibilities, and what you're looking for..." rows={4} />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="requirements">Requirements (comma-separated)</Label>
+                        <Textarea id="requirements" value={formData.requirements} onChange={handleInputChange('requirements')} placeholder="React, TypeScript, 3+ years experience, etc." rows={3} />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="benefits">Benefits (comma-separated)</Label>
+                        <Textarea id="benefits" value={formData.benefits} onChange={handleInputChange('benefits')} placeholder="Health insurance, Remote work, 401k, etc." rows={3} />
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => {
+                        setIsCreateDialogOpen(false);
+                        resetForm();
+                      }}>
+                        Cancel
+                      </Button>
+                      <Button onClick={editingJob ? handleUpdateJob : handleCreateJob}>
+                        {editingJob ? 'Update Job' : 'Create Job'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
-
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Job
-                  </Button>
-                </DialogTrigger>
-
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editingJob ? 'Edit Job Listing' : 'Create New Job Listing'}</DialogTitle>
-                    <DialogDescription>
-                      {editingJob ? 'Update your job listing details' : 'Fill in the details to create a new job listing'}
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Job Title</Label>
-                      <Input id="title" value={formData.title} onChange={handleInputChange('title')} placeholder="e.g. Senior Frontend Developer" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input id="location" value={formData.location} onChange={handleInputChange('location')} placeholder="e.g. San Francisco, CA" />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="type">Job Type</Label>
-                        <Select value={formData.type} onValueChange={handleSelectChange}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="full-time">Full Time</SelectItem>
-                            <SelectItem value="part-time">Part Time</SelectItem>
-                            <SelectItem value="contract">Contract</SelectItem>
-                            <SelectItem value="freelance">Freelance</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="salaryMin">Min Salary ($)</Label>
-                        <Input id="salaryMin" type="number" value={formData.salaryMin} onChange={handleInputChange('salaryMin')} placeholder="80000" />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="salaryMax">Max Salary ($)</Label>
-                        <Input id="salaryMax" type="number" value={formData.salaryMax} onChange={handleInputChange('salaryMax')} placeholder="120000" />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Job Description</Label>
-                      <Textarea id="description" value={formData.description} onChange={handleInputChange('description')} placeholder="Describe the role, responsibilities, and what you're looking for..." rows={4} />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="requirements">Requirements (comma-separated)</Label>
-                      <Textarea id="requirements" value={formData.requirements} onChange={handleInputChange('requirements')} placeholder="React, TypeScript, 3+ years experience, etc." rows={3} />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="benefits">Benefits (comma-separated)</Label>
-                      <Textarea id="benefits" value={formData.benefits} onChange={handleInputChange('benefits')} placeholder="Health insurance, Remote work, 401k, etc." rows={3} />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateDialogOpen(false);
-                      resetForm();
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={editingJob ? handleUpdateJob : handleCreateJob}>
-                      {editingJob ? 'Update Job' : 'Create Job'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
 
             {/* Stats Cards */}
@@ -322,6 +339,10 @@ export const RecruiterDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">
+            <ProfileSetup />
+          </TabsContent>
+
+          <TabsContent value="company" className="mt-6">
             <ProfileSetup />
           </TabsContent>
         </Tabs>
