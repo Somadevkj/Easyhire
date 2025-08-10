@@ -33,7 +33,7 @@ export const AuthForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(formData.email, formData.password, formData.userType);
+      const success = await login(formData.email, formData.password, 'candidate');
       if (success) {
         toast({
           title: "Welcome back!",
@@ -118,24 +118,6 @@ export const AuthForm: React.FC = () => {
                   onChange={handleInputChange('password')}
                   required
                 />
-              </div>
-              
-              <div className="space-y-3">
-                <Label>I am a...</Label>
-                <RadioGroup 
-                  value={formData.userType} 
-                  onValueChange={handleUserTypeChange}
-                  className="flex gap-6"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="candidate" id="candidate-login" />
-                    <Label htmlFor="candidate-login">Job Seeker</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recruiter" id="recruiter-login" />
-                    <Label htmlFor="recruiter-login">Recruiter</Label>
-                  </div>
-                </RadioGroup>
               </div>
               
               <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
